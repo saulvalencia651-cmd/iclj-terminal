@@ -8,6 +8,18 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="description" content="Terminal Informativa Interactiva y Partido Estudiantil ICLJ 2026-2027">
     <title>Partido ICLJ - Terminal Informativa</title>
+
+    <script>
+        window.__firebase_config = window.__firebase_config || {
+            apiKey: "demo",
+            authDomain: "demo.firebaseapp.com",
+            projectId: "demo",
+            storageBucket: "demo.appspot.com",
+            messagingSenderId: "000000000000",
+            appId: "1:000000000000:web:0000000000000000"
+        };
+        window.__app_id = window.__app_id || 'nexus-escuela-app';
+    </script>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -59,15 +71,39 @@
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config) 
-            : { apiKey: "demo", authDomain: "demo.firebaseapp.com", projectId: "demo" };
+        const firebaseConfig = (() => {
+            try {
+                const raw = typeof window !== 'undefined' && window.__firebase_config;
+                if (raw) {
+                    if (typeof raw === 'string') return JSON.parse(raw);
+                    return raw;
+                }
+
+                const saved = localStorage.getItem('iclj-firebase-config');
+                if (saved) return JSON.parse(saved);
+            } catch (e) {
+                console.warn('No se pudo cargar la config de Firebase desde la ventana. Usando demo:', e);
+            }
+
+            return {
+                apiKey: "demo",
+                authDomain: "demo.firebaseapp.com",
+                projectId: "demo",
+                storageBucket: "demo.appspot.com",
+                messagingSenderId: "000000000000",
+                appId: "1:000000000000:web:0000000000000000"
+            };
+        })();
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'nexus-escuela-app';
+        const appId = (() => {
+            const rawId = typeof window !== 'undefined' && window.__app_id;
+            return rawId || 'nexus-escuela-app';
+        })();
+
         const proposalsColRef = collection(db, 'artifacts', appId, 'public', 'data', 'proposals');
         const pledgeDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'stats', 'pledges');
 
