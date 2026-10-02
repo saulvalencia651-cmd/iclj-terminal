@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="theme-color" content="#090d16">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="description" content="Terminal Informativa Interactiva y Partido Estudiantil ICLJ 2026-2027">
+    <title>Partido ICLJ - Terminal Informativa</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            900: '#312e81',
+                            neon: '#00f0ff',
+                            accent: '#ff007f'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- GSAP & ScrollTrigger -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    
+    <!-- Three.js para modelo 3D de cabeza de lobo flotante -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Firebase SDK Modules for Realtime Public Data -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : { apiKey: "demo", authDomain: "demo.firebaseapp.com", projectId: "demo" };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'nexus-escuela-app';
+        const proposalsColRef = collection(db, 'artifacts', appId, 'public', 'data', 'proposals');
+        const pledgeDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'stats', 'pledges');
+
+        window.db = db;
+        window.auth = auth;
+        window.appId = appId;
+        window.proposalsColRef = proposalsColRef;
+        window.pledgeDocRef = pledgeDocRef;
+        window.addDoc = addDoc;
+        window.updateDoc = updateDoc;
+        window.doc = doc;
+        window.setDoc = setDoc;
+        window.getDoc = getDoc;
+        window.getDocs = getDocs;
+        window.signInAnonymously = signInAnonymously;
+        window.signInWithCustomToken = signInWithCustomToken;
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #090d16;
+            color: #f3f4f6;
+            overflow-x: hidden;
+        }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .glass-card:hover {
+            border-color: rgba(0, 240, 255, 0.5);
+            box-shadow: 0 10px 30px -10px rgba(0, 240, 255, 0.3);
+            transform: translateY(-4px);
+        }
+
+        .glow-text {
+            text-shadow: 0 0 20px rgba(0, 240, 255, 0.6);
+        }
+
+        .scanlines {
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0, 0, 0, 0.3) 50%,
+                rgba(0, 0, 0, 0.3)
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+        }
+
+        .parallax-wrap {
+            overflow: hidden;
+            border-radius: 1.5rem;
+            position: relative;
+        }
+
+        .parallax-img {
+            will-change: transform;
+            transform: scale(1.3);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #090d16;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #312e81;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00f0ff;
+        }
+
+        .cyber-grid {
+            position: fixed;
+            bottom: 0;
+            left: -50%;
+            width: 200%;
+            height: 60vh;
+            background-image:
+                linear-gradient(to right, rgba(0, 240, 255, 0.15) 1px, transparent 1px),
+                linear-gradient(to top, rgba(0, 240, 255, 0.15) 1px, transparent 1px);
+            background-size: 60px 60px;
+            transform: perspective(600px) rotateX(70deg);
+            z-index: 0;
+            pointer-events: none;
+            animation: gridMove 15s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: perspective(600px) rotateX(70deg) translateY(0); }
+            100% { transform: perspective(600px) rotateX(70deg) translateY(60px); }
+        }
+
+        .neon-wolf {
+            position: absolute;
+            fill: none;
+            stroke-width: 6;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            opacity: 0;
+            animation: floatWolf infinite ease-in-out;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes floatWolf {
+            0% { transform: translateY(150px) scale(0.8) rotate(-10deg); opacity: 0; }
+            20% { opacity: 0.6; }
+            80% { opacity: 0.6; }
+            100% { transform: translateY(-300px) scale(1.2) rotate(10deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="relative">
+
+    <div class="fixed inset-0 scanlines z-50 opacity-20 pointer-events-none"></div>
+    <div class="cyber-grid"></div>
+    <div id="wolves-background" class="fixed inset-0 z-0 overflow-hidden pointer-events-none"></div>
+
+    <header class="fixed top-0 left-0 right-0 z-40 px-4 py-3 sm:px-8">
+        <nav class="max-w-7xl mx-auto glass-panel rounded-full px-6 py-3 flex items-center justify-between border border-white/10 shadow-2xl">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-brand-600 via-brand-500 to-brand-neon flex items-center justify-center text-white shadow-lg shadow-brand-500/50 p-2">
+                    <svg class="w-full h-full" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                        <g stroke="currentColor" stroke-width="24" stroke-linejoin="round" stroke-linecap="round" fill="none">
+                            <path d="M256 32L170 160L90 120L120 256L32 300L160 370L256 480L352 370L480 300L392 256L422 120L342 160Z" />
+                            <path d="M256 120L300 200L256 240L212 200Z" />
+                            <path d="M256 240L256 480" />
+                        </g>
+                        <path d="M165 220 L195 205 L225 225 L195 235 Z" fill="currentColor"/>
+                        <path d="M347 220 L317 205 L287 225 L317 235 Z" fill="currentColor"/>
+                    </svg>
+                </div>
+                <div>
+                    <span class="font-extrabold text-sm sm:text-base tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-white via-indigo-200 to-brand-neon">
+                        Partido ICLJ
+                    </span>
+                    <span class="hidden lg:inline-block text-xs bg-brand-500/20 text-brand-neon px-2 py-0.5 rounded-full border border-brand-500/30 ml-2">
+                        Planilla Escolar 2026-2027
+                    </span>
+                </div>
+            </div>
+
+            <div class="flex items-center bg-slate-900/80 p-1.5 rounded-full border border-white/10 shadow-inner">
+                <button id="tab-info-btn" onclick="switchMainView('info')" class="px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300 bg-gradient-to-r from-brand-600 to-brand-500 text-white shadow-md">
+                    <i class="fa-solid fa-paw mr-1.5 text-brand-neon"></i>Información
+                </button>
+                <button id="tab-aportaciones-btn" onclick="switchMainView('aportaciones')" class="px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300 text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-shield-cat mr-1.5 text-brand-neon"></i>Aportaciones
+                </button>
+            </div>
+
+            <div class="hidden md:flex items-center space-x-4">
+                <button onclick="shareTerminal()" class="px-3.5 py-2 rounded-full text-xs font-bold bg-white/10 text-white hover:bg-white/20 border border-white/15 transition-all duration-300 flex items-center">
+                    <i class="fa-solid fa-share-nodes mr-1.5 text-brand-neon"></i> Compartir
+                </button>
+                <a href="#voto" class="px-4 py-2 rounded-full text-xs font-bold bg-brand-neon/10 text-brand-neon border border-brand-neon/30 hover:bg-brand-neon hover:text-slate-950 transition-all duration-300 shadow-lg shadow-brand-neon/20">
+                    <i class="fa-solid fa-paw mr-1"></i> ¡VOTA AQUÍ!
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <section class="relative min-h-screen pt-28 pb-16 flex items-center justify-center overflow-hidden">
+        <div id="three-container" class="absolute inset-0 z-0 opacity-30"></div>
+        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-600/20 rounded-full filter blur-[120px] pointer-events-none"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-brand-neon/10 rounded-full filter blur-[120px] pointer-events-none"></div>
+
+        <div class="relative z-10 max-w-5xl mx-auto px-4 text-center">
+            <div class="inline-flex items-center space-x-2 px-4 py-2 rounded-full glass-panel text-xs sm:text-sm text-brand-neon mb-6 border border-brand-neon/30 animate-pulse">
+                <i class="fa-solid fa-shield-cat"></i>
+                <span>MANADA UNIDA • TERMINAL INTERACTIVA ICLJ</span>
+            </div>
+
+            <div class="mb-4">
+                <span class="inline-block text-xs sm:text-sm md:text-base font-black tracking-widest uppercase bg-clip-text text-transparent bg-gradient-to-r from-brand-neon via-pink-400 to-indigo-300 px-6 py-2 rounded-2xl glass-panel border border-brand-neon/40 shadow-xl glow-text">
+                    🐺 IMPERIO CONALOB DE LA LEY Y LA JUVENTUD ⚖️
+                </span>
+            </div>
+
+            <h1 id="hero-title" class="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight mb-6 leading-tight">
+                El territorio y futuro de nuestro plantel <br class="hidden sm:block"/>
+                <span class="bg-clip-text text-transparent bg-gradient-to-r from-brand-neon via-indigo-300 to-pink-500 glow-text">
+                    lo lideramos juntos
+                </span>
+            </h1>
+
+            <p id="hero-subtitle" class="text-slate-300 text-base sm:text-xl max-w-3xl mx-auto mb-10 leading-relaxed font-light">
+                Bienvenido al dispositivo interactivo del <strong class="text-white font-semibold">Partido ICLJ</strong>. Consulta nuestras soluciones en manada, descubre innovaciones tecnológicas e impulsa tus propias ideas.
+            </p>
+
+            <div id="hero-buttons" class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a href="#proyectos" class="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-brand-600 via-brand-500 to-brand-neon text-slate-950 font-bold text-base shadow-xl shadow-brand-500/30 hover:scale-105 transition-all duration-300 flex items-center justify-center">
+                    <i class="fa-solid fa-paw mr-2"></i> Explorar Propuestas de la Manada
+                </a>
+                <button onclick="switchMainView('aportaciones')" class="w-full sm:w-auto px-8 py-4 rounded-full glass-panel border border-white/20 text-white font-bold text-base hover:bg-white/10 hover:border-brand-neon transition-all duration-300 flex items-center justify-center">
+                    <i class="fa-solid fa-feather mr-2 text-brand-neon"></i> Aportar una Idea
+                </button>
+            </div>
+
+            <div class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 glass-panel p-6 rounded-3xl border border-white/10 shadow-2xl">
+                <div class="p-3 text-center border-r border-white/10 last:border-none">
+                    <div id="live-proposals-count" class="text-2xl sm:text-4xl font-extrabold text-brand-neon">0</div>
+                    <div class="text-xs text-slate-400 mt-1 uppercase tracking-wider font-semibold">Propuestas de Manada</div>
+                </div>
+                <div class="p-3 text-center border-r border-white/10 last:border-none">
+                    <div class="text-2xl sm:text-4xl font-extrabold text-pink-400">100%</div>
+                    <div class="text-xs text-slate-400 mt-1 uppercase tracking-wider font-semibold">Lealtad Estudiantil</div>
+                </div>
+                <div class="p-3 text-center border-r border-white/10 last:border-none">
+                    <div class="text-2xl sm:text-4xl font-extrabold text-indigo-400">24/7</div>
+                    <div class="text-xs text-slate-400 mt-1 uppercase tracking-wider font-semibold">Vigilancia y Apoyo</div>
+                </div>
+                <div class="p-3 text-center">
+                    <div class="text-2xl sm:text-4xl font-extrabold text-emerald-400">#1</div>
+                    <div class="text-xs text-slate-400 mt-1 uppercase tracking-wider font-semibold">Espíritu ICLJ</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div id="view-info" class="space-y-32 transition-all duration-500">
+            <section class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                <div class="space-y-6 reveal-left">
+                    <div class="inline-flex items-center space-x-2 text-brand-neon text-sm font-bold uppercase tracking-wider">
+                        <i class="fa-solid fa-shield-cat"></i>
+                        <span>Filosofía de la Manada</span>
+                    </div>
+                    <h2 class="text-3xl sm:text-5xl font-extrabold text-white leading-tight">
+                        Transformando el cona con la fuerza y unión de la manada
+                    </h2>
+                    <p class="text-slate-300 text-lg leading-relaxed">
+                        Nuestra planilla no surge de decisiones aisladas, sino del instinto y la cooperación de una manada donde cada estudiante es parte crucial del territorio.
+                    </p>
+                    <div class="space-y-4 pt-2">
+                        <div class="flex items-start space-x-4 glass-card p-4 rounded-2xl">
+                            <div class="w-12 h-12 rounded-xl bg-brand-500/20 text-brand-neon flex items-center justify-center text-xl shrink-0">
+                                <i class="fa-solid fa-paw"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white text-lg">Guía y Liderazgo Alfa</h4>
+                                <p class="text-slate-400 text-sm">Llevamos las propuestas más respaldadas firmemente ante la dirección del cona.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-4 glass-card p-4 rounded-2xl">
+                            <div class="w-12 h-12 rounded-xl bg-pink-500/20 text-pink-400 flex items-center justify-center text-xl shrink-0">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white text-lg">Protección e Inclusión</h4>
+                                <p class="text-slate-400 text-sm">Eventos, proyectos y mejoras elegidas en conjunto para que ningún lobo se quede atrás.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="parallax-wrap h-[420px] shadow-2xl rounded-3xl border border-white/10 overflow-hidden reveal-right">
+                    <img src="https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?auto=format&fit=crop&w=1200&q=80" 
+                         alt="Lobo alfa estilo meme" 
+                         class="parallax-img w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80"></div>
+                    <div class="absolute bottom-6 left-6 right-6 p-4 glass-panel rounded-2xl border border-brand-neon/40">
+                        <p class="text-xs text-brand-neon font-mono font-bold uppercase mb-1">🐺 Mentalidad de Lobo / Sigma ICLJ</p>
+                        <p class="text-sm font-semibold text-white">"No lloramos por la calificación... nos armamos un plan y conquistamos el cona."</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="proyectos" class="space-y-12">
+                <div class="text-center max-w-3xl mx-auto space-y-4">
+                    <span class="text-brand-neon font-bold text-sm uppercase tracking-widest px-4 py-1.5 rounded-full glass-panel border border-brand-neon/30">
+                        <i class="fa-solid fa-globe mr-1"></i> Muro Abierto de la Manada
+                    </span>
+                    <h2 class="text-3xl sm:text-5xl font-black text-white">
+                        Propuestas Creadas por la Comunidad
+                    </h2>
+                    <p class="text-slate-400 text-base sm:text-lg">
+                        Todas las propuestas ingresadas por los alumnos son públicas en tiempo real. ¡Busca, filtra por tema, respalda a tus compañeros o envía tu propia idea!
+                    </p>
+
+                    <div class="glass-panel p-4 rounded-2xl border border-white/10 shadow-xl space-y-3 mt-6 text-left">
+                        <div class="relative">
+                            <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" id="search-input-info" oninput="handleSearchFilter()" placeholder="🔍 Buscar propuesta por palabra clave, tema o autor..." class="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-900/90 border border-white/15 text-white placeholder-slate-400 text-sm focus:outline-none focus:border-brand-neon transition">
+                        </div>
+                        <div class="flex flex-wrap gap-2 pt-1" id="category-filters-info">
+                            <button onclick="setCategoryFilter('Todas')" class="cat-filter-btn px-3.5 py-1.5 rounded-lg text-xs font-bold border transition bg-brand-neon/20 text-brand-neon border-brand-neon/40" data-cat="Todas">Todas</button>
+                            <button onclick="setCategoryFilter('Infraestructura')" class="cat-filter-btn px-3.5 py-1.5 rounded-lg text-xs font-bold border transition bg-slate-800 text-slate-300 border-white/10 hover:border-emerald-400" data-cat="Infraestructura">Infraestructura</button>
+                            <button onclick="setCategoryFilter('Tecnología')" class="cat-filter-btn px-3.5 py-1.5 rounded-lg text-xs font-bold border transition bg-slate-800 text-slate-300 border-white/10 hover:border-brand-neon" data-cat="Tecnología">Tecnología</button>
+                            <button onclick="setCategoryFilter('Deportes')" class="cat-filter-btn px-3.5 py-1.5 rounded-lg text-xs font-bold border transition bg-slate-800 text-slate-300 border-white/10 hover:border-pink-400" data-cat="Deportes">Deportes</button>
+                            <button onclick="setCategoryFilter('Cultura')" class="cat-filter-btn px-3.5 py-1.5 rounded-lg text-xs font-bold border transition bg-slate-800 text-slate-300 border-white/10 hover:border-amber-400" data-cat="Cultura">Cultura</button>
+                            <button onclick="setCategoryFilter('Inclusión')" class="cat-filter-btn px-3.5 py-1.5 rounded-lg text-xs font-bold border transition bg-slate-800 text-slate-300 border-white/10 hover:border-indigo-400" data-cat="Inclusión">Inclusión</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <button onclick="switchMainView('aportaciones')" class="inline-flex items-center px-6 py-3 rounded-full bg-gradient-to-r from-brand-neon to-brand-500 text-slate-950 font-extrabold text-sm shadow-lg shadow-brand-neon/20 hover:scale-105 transition">
+                            <i class="fa-solid fa-paw mr-2"></i> Publicar Nueva Propuesta
+                        </button>
+                    </div>
+                </div>
+
+                <div id="proyectos-dynamic-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="col-span-full text-center py-12 glass-panel rounded-3xl border border-white/10 text-slate-400">
+                        <i class="fa-solid fa-spinner fa-spin text-3xl text-brand-neon mb-3 block"></i>
+                        Cargando propuestas de la manada...
+                    </div>
+                </div>
+            </section>
+
+            <section id="voto" class="glass-panel p-8 sm:p-14 rounded-3xl border border-brand-neon/30 relative overflow-hidden">
+                <div class="absolute -right-20 -top-20 w-80 h-80 bg-brand-neon/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div class="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+                    <div class="lg:col-span-7 space-y-6">
+                        <span class="bg-brand-neon/20 text-brand-neon px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border border-brand-neon/40">
+                            <i class="fa-solid fa-paw mr-1"></i> El Rugido de tu Voto
+                        </span>
+                        <h2 class="text-3xl sm:text-5xl font-black text-white leading-tight">
+                            ¿Por qué es fundamental que la manada vote unida?
+                        </h2>
+                        <p class="text-slate-300 text-base sm:text-lg leading-relaxed">
+                            Mantenerse al margen debilita a la manada. Un voto informado exige cuentas claras, mejoras tecnológicas en las aulas y un plantel con total respaldo estudiantil.
+                        </p>
+
+                        <div class="space-y-3 pt-2">
+                            <div class="glass-card p-4 rounded-xl cursor-pointer hover:border-brand-neon/50 transition-all" onclick="toggleReason(this)">
+                                <div class="flex justify-between items-center font-bold text-white">
+                                    <span><i class="fa-solid fa-paw text-brand-neon mr-2"></i> Exige Resultados Alfa a las Autoridades</span>
+                                    <i class="fa-solid fa-chevron-down text-slate-400"></i>
+                                </div>
+                                <p class="text-slate-300 text-sm mt-2 hidden">
+                                    Una planilla ganadora con alta participación de la manada tiene mayor peso de negociación ante la dirección del cona.
+                                </p>
+                            </div>
+                            <div class="glass-card p-4 rounded-xl cursor-pointer hover:border-brand-neon/50 transition-all" onclick="toggleReason(this)">
+                                <div class="flex justify-between items-center font-bold text-white">
+                                    <span><i class="fa-solid fa-shield-cat text-pink-400 mr-2"></i> Presupuesto Asignado Correctamente</span>
+                                    <i class="fa-solid fa-chevron-down text-slate-400"></i>
+                                </div>
+                                <p class="text-slate-300 text-sm mt-2 hidden">
+                                    Nos aseguraremos de que las cuotas y presupuestos escolares se inviertan prioritariamente en materiales que usas diariamente.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-5 bg-slate-900 p-6 sm:p-8 rounded-3xl border border-white/10 text-center space-y-6 shadow-2xl">
+                        <div class="w-20 h-20 bg-gradient-to-tr from-brand-600 to-brand-neon rounded-full mx-auto flex items-center justify-center p-4 text-slate-950 font-black shadow-lg shadow-brand-500/50">
+                            <svg class="w-full h-full text-slate-950" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                                <g stroke="currentColor" stroke-width="24" stroke-linejoin="round" stroke-linecap="round" fill="none">
+                                    <path d="M256 32L170 160L90 120L120 256L32 300L160 370L256 480L352 370L480 300L392 256L422 120L342 160Z" />
+                                    <path d="M256 120L300 200L256 240L212 200Z" />
+                                    <path d="M256 240L256 480" />
+                                </g>
+                                <path d="M165 220 L195 205 L225 225 L195 235 Z" fill="currentColor"/>
+                                <path d="M347 220 L317 205 L287 225 L317 235 Z" fill="currentColor"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-2xl font-bold text-white">Compromiso de Voto</h3>
+                        <p class="text-slate-400 text-sm">
+                            Súmate a los lobos que ya decidieron respaldar las mejores propuestas en el Partido ICLJ.
+                        </p>
+
+                        <div class="bg-slate-950 p-4 rounded-2xl border border-white/5">
+                            <span class="text-xs text-slate-400 uppercase tracking-widest block font-mono">Lobos Comprometidos</span>
+                            <span id="pledge-count" class="text-4xl font-extrabold text-brand-neon">0</span>
+                        </div>
+
+                        <button id="pledge-btn" onclick="takePledge()" class="w-full py-4 rounded-2xl bg-gradient-to-r from-brand-neon to-emerald-400 text-slate-950 font-black text-lg shadow-xl shadow-brand-neon/20 hover:scale-[1.02] active:scale-95 transition-all">
+                            ¡Me comprometo a Votar! 🐺
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div id="view-aportaciones" class="hidden space-y-12 transition-all duration-500">
+            <div class="text-center max-w-3xl mx-auto space-y-4">
+                <span class="text-pink-400 font-bold text-sm uppercase tracking-widest px-4 py-1.5 rounded-full glass-panel border border-pink-500/30">
+                    <i class="fa-solid fa-paw mr-1"></i> Participación de la Manada
+                </span>
+                <h2 class="text-3xl sm:text-5xl font-black text-white">
+                    Envía tu Propuesta o Apoya a tu Manada
+                </h2>
+                <p class="text-slate-300 text-base sm:text-lg">
+                    Cualquier estudiante puede publicar su propuesta. Aquellas con más respaldos de la manada serán integradas formalmente al plan de trabajo final.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                <div class="lg:col-span-5 glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 space-y-6 h-fit">
+                    <h3 class="text-xl font-bold text-white flex items-center">
+                        <i class="fa-solid fa-feather text-brand-neon mr-2"></i> Crear Propuesta
+                    </h3>
+
+                    <form id="idea-form" onsubmit="submitIdea(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 uppercase mb-2">Tu Nombre o Seudónimo / Grado</label>
+                            <input type="text" id="idea-author" required placeholder="Ej. Camila (5º Semestre)" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-brand-neon transition">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 uppercase mb-2">Categoría del Territorio</label>
+                            <select id="idea-category" class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white text-sm focus:outline-none focus:border-brand-neon transition">
+                                <option value="Infraestructura">🏗️ Infraestructura y Espacios</option>
+                                <option value="Tecnología">💻 Tecnología e Internet</option>
+                                <option value="Deportes">⚽ Deportes y Torneos</option>
+                                <option value="Cultura">🎨 Cultura y Eventos</option>
+                                <option value="Inclusión">🤝 Inclusión y Bienestar</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 uppercase mb-2">Detalle de tu Propuesta</label>
+                            <textarea id="idea-text" required rows="4" placeholder="Describe qué propuesta o mejora te gustaría implementar en el cona..." class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-brand-neon transition"></textarea>
+                        </div>
+
+                        <button type="submit" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-brand-600 via-brand-500 to-pink-500 text-white font-bold text-sm shadow-lg shadow-brand-500/30 hover:scale-[1.02] transition">
+                            <i class="fa-solid fa-paw mr-1"></i> Publicar Propuesta
+                        </button>
+                    </form>
+                </div>
+
+                <div class="lg:col-span-7 space-y-4">
+                    <h3 class="text-xl font-bold text-white flex items-center justify-between">
+                        <span><i class="fa-solid fa-shield-cat text-pink-400 mr-2"></i> Propuestas de la Manada</span>
+                        <span class="text-xs text-slate-400 font-normal">Actualización en tiempo real</span>
+                    </h3>
+
+                    <div id="ideas-feed" class="space-y-4 max-h-[600px] overflow-y-auto pr-2"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 ease-out pointer-events-none">
+        <div class="glass-panel px-6 py-4 rounded-2xl border border-brand-neon/40 shadow-2xl flex items-center space-x-3 text-white">
+            <i id="toast-icon" class="fa-solid fa-paw text-brand-neon text-xl"></i>
+            <span id="toast-msg" class="text-sm font-semibold">Operación realizada con éxito</span>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let currentProposalsData = [];
+        let currentSearchQuery = '';
+        let currentSelectedCategory = 'Todas';
+        let pledged = false;
+
+        window.onload = function () {
+            initThreeJSWolfHead();
+            initGSAPAnimations();
+            initNeonWolves();
+            authenticateUser();
+        };
+
+        function initNeonWolves() {
+            const container = document.getElementById('wolves-background');
+            container.innerHTML = '';
+            const colors = ['#00f0ff', '#ff007f', '#6366f1', '#a855f7'];
+            const numWolves = 40;
+
+            for (let i = 0; i < numWolves; i++) {
+                const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                svg.setAttribute("viewBox", "0 0 512 512");
+                svg.classList.add("neon-wolf");
+
+                const size = Math.random() * 80 + 30;
+                const left = Math.random() * 100;
+                const top = Math.random() * 100; 
+                const delay = Math.random() * 20;
+                const duration = Math.random() * 10 + 10;
+                const color = colors[Math.floor(Math.random() * colors.length)];
+
+                svg.style.width = `${size}px`;
+                svg.style.height = `${size}px`;
+                svg.style.left = `${left}%`;
+                svg.style.top = `${top}%`;
+                svg.style.animationDelay = `${delay}s`;
+                svg.style.animationDuration = `${duration}s`;
+                svg.style.stroke = color;
+                svg.style.filter = `drop-shadow(0 0 8px ${color})`;
+
+                svg.innerHTML = `
+                    <path d="M256 32L170 160L90 120L120 256L32 300L160 370L256 480L352 370L480 300L392 256L422 120L342 160Z" fill="none" stroke-width="12" stroke-linejoin="round"/>
+                    <path d="M256 120L300 200L256 240L212 200Z" fill="none" stroke-width="12" stroke-linejoin="round"/>
+                    <path d="M256 240L256 480" fill="none" stroke-width="12" stroke-linecap="round"/>
+                    <path d="M170 160L212 200L120 256" fill="none" stroke-width="10" stroke-linejoin="round"/>
+                    <path d="M342 160L300 200L392 256" fill="none" stroke-width="10" stroke-linejoin="round"/>
+                    <path d="M165 220 L195 205 L225 225 L195 235 Z" fill="${color}" stroke="none" filter="drop-shadow(0 0 6px ${color})"/>
+                    <path d="M347 220 L317 205 L287 225 L317 235 Z" fill="${color}" stroke="none" filter="drop-shadow(0 0 6px ${color})"/>
+                `;
+                
+                container.appendChild(svg);
+            }
+        }
+
+        async function authenticateUser() {
+            if (!window.auth) return;
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await window.signInWithCustomToken(window.auth, __initial_auth_token);
+                } else {
+                    await window.signInAnonymously(window.auth);
+                }
+                currentUser = window.auth.currentUser;
+                await seedInitialDataIfNeeded();
+                setupRealtimeListeners();
+            } catch (err) {
+                console.error("Error al autenticar:", err);
+            }
+        }
+
+        async function seedInitialDataIfNeeded() {
+            if (!window.getDocs || !window.proposalsColRef || !window.setDoc || !window.pledgeDocRef) return;
+            try {
+                const pledgeSnap = await window.getDoc(window.pledgeDocRef);
+                if (!pledgeSnap.exists() || typeof pledgeSnap.data().count !== 'number' || pledgeSnap.data().count < 342) {
+                    await window.setDoc(window.pledgeDocRef, { count: 342 }, { merge: true });
+                }
+
+                const propSnap = await window.getDocs(window.proposalsColRef);
+                if (propSnap.empty) {
+                    const initialProposals = [
+                        {
+                            author: "Sofía Martínez (6to Semestre)",
+                            category: "Infraestructura",
+                            text: "Instalar dispensadores de agua fría purificada en cada edificio del cona para reducir el uso de plástico y mantenernos hidratados.",
+                            likes: 89,
+                            likedBy: [],
+                            createdAt: Date.now() - 3600000 * 5
+                        },
+                        {
+                            author: "Mateo R. (4to Semestre)",
+                            category: "Tecnología",
+                            text: "Amoblar y mejorar la red Wi-Fi de la biblioteca principal y habilitar estaciones de carga rápida para computadoras y celulares.",
+                            likes: 124,
+                            likedBy: [],
+                            createdAt: Date.now() - 3600000 * 12
+                        },
+                        {
+                            author: "Carlos Gómez (5to Semestre)",
+                            category: "Deportes",
+                            text: "Organizar torneos intersemestrales nocturnos de fútbol rápido y básquetbol con árbitros profesionales y premios atractivos.",
+                            likes: 76,
+                            likedBy: [],
+                            createdAt: Date.now() - 3600000 * 20
+                        },
+                        {
+                            author: "Valeria N. (3er Semestre)",
+                            category: "Cultura",
+                            text: "Habilitar un espacio abierto de expresión artística, murales estudiantiles y cine-debate los viernes por la tarde.",
+                            likes: 62,
+                            likedBy: [],
+                            createdAt: Date.now() - 3600000 * 35
+                        },
+                        {
+                            author: "Equipo ICLJ 2026",
+                            category: "Inclusión",
+                            text: "Implementar rampas adicionales y señalización braille completa en todas las áreas de acceso común y laboratorios.",
+                            likes: 110,
+                            likedBy: [],
+                            createdAt: Date.now() - 3600000 * 48
+                        }
+                    ];
+
+                    for (const prop of initialProposals) {
+                        await window.addDoc(window.proposalsColRef, prop);
+                    }
+                }
+            } catch (e) {
+                console.error("Error al sembrar datos iniciales:", e);
+            }
+        }
+
+        function setupRealtimeListeners() {
+            if (!currentUser || !window.onSnapshot) return;
+
+            window.onSnapshot(window.proposalsColRef, (snapshot) => {
+                const proposals = [];
+                snapshot.forEach((docSnap) => {
+                    proposals.push({ id: docSnap.id, ...docSnap.data() });
+                });
+
+                proposals.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                currentProposalsData = proposals;
+
+                const countElem = document.getElementById('live-proposals-count');
+                if (countElem) countElem.innerText = proposals.length;
+
+                handleSearchFilter();
+            }, (error) => {
+                console.error("Error escrutando propuestas:", error);
+            });
+
+            window.onSnapshot(window.pledgeDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data && typeof data.count === 'number') {
+                        const pElem = document.getElementById('pledge-count');
+                        if (pElem) pElem.innerText = data.count;
+                    }
+                }
+            }, (error) => {
+                console.error("Error escrutando votos:", error);
+            });
+        }
+
+        function setCategoryFilter(cat) {
+            currentSelectedCategory = cat;
+            document.querySelectorAll('.cat-filter-btn').forEach(btn => {
+                if (btn.getAttribute('data-cat') === cat) {
+                    btn.className = "cat-filter-btn px-3.5 py-1.5 rounded-lg text-xs font-bold border transition bg-brand-neon/20 text-brand-neon border-brand-neon/40";
+                } else {
+                    btn.className = "cat-filter-btn px-3.5 py-1.5 rounded-lg text-xs font-bold border transition bg-slate-800 text-slate-300 border-white/10 hover:border-white/30";
+                }
+            });
+            handleSearchFilter();
+        }
+
+        function handleSearchFilter() {
+            const input = document.getElementById('search-input-info');
+            if (input) currentSearchQuery = input.value.trim().toLowerCase();
+
+            let filtered = currentProposalsData.filter(p => {
+                const matchesCat = (currentSelectedCategory === 'Todas') || (p.category === currentSelectedCategory);
+                const text = (p.text || '').toLowerCase();
+                const author = (p.author || '').toLowerCase();
+                const cat = (p.category || '').toLowerCase();
+                const matchesQuery = !currentSearchQuery || text.includes(currentSearchQuery) || author.includes(currentSearchQuery) || cat.includes(currentSearchQuery);
+                return matchesCat && matchesQuery;
+            });
+
+            renderProposals(filtered);
+        }
+
+        function renderProposals(proposals) {
+            const feed = document.getElementById('ideas-feed');
+            const showcase = document.getElementById('proyectos-dynamic-list');
+
+            const categoryColors = {
+                'Infraestructura': 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30',
+                'Tecnología': 'text-brand-neon bg-brand-500/20 border-brand-500/30',
+                'Deportes': 'text-pink-400 bg-pink-500/20 border-pink-500/30',
+                'Cultura': 'text-amber-400 bg-amber-500/20 border-amber-500/30',
+                'Inclusión': 'text-indigo-400 bg-indigo-500/20 border-indigo-500/30'
+            };
+
+            if (proposals.length === 0) {
+                const emptyHTML = `
+                    <div class="col-span-full glass-panel p-8 rounded-3xl text-center space-y-3 border border-white/10">
+                        <div class="w-12 h-12 rounded-full bg-brand-500/20 text-brand-neon flex items-center justify-center mx-auto text-xl">
+                            <i class="fa-solid fa-shield-cat"></i>
+                        </div>
+                        <h4 class="font-bold text-white text-lg">No se encontraron propuestas</h4>
+                        <p class="text-slate-400 text-sm max-w-md mx-auto">Prueba buscando con otra palabra clave o selecciona una categoría diferente.</p>
+                        <button onclick="switchMainView('aportaciones')" class="px-5 py-2.5 rounded-full bg-brand-500 text-white font-bold text-xs hover:bg-brand-600 transition">
+                            Publicar la Primera Propuesta
+                        </button>
+                    </div>
+                `;
+                if (feed) feed.innerHTML = emptyHTML;
+                if (showcase) showcase.innerHTML = emptyHTML;
+                return;
+            }
+
+            if (feed) {
+                feed.innerHTML = proposals.map(p => {
+                    const badgeClass = categoryColors[p.category] || 'text-brand-neon bg-brand-500/20 border-brand-500/30';
+                    const uid = currentUser ? currentUser.uid : '';
+                    const hasLiked = (p.likedBy || []).includes(uid);
+
+                    return `
+                        <div class="glass-card p-5 rounded-2xl border border-white/10 space-y-3">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${badgeClass}">
+                                        ${escapeHTML(p.category || 'Propuesta')}
+                                    </span>
+                                    <h4 class="font-bold text-white mt-1.5 text-base">${escapeHTML((p.text || '').substring(0, 60))}${p.text && p.text.length > 60 ? '...' : ''}</h4>
+                                </div>
+                                <button onclick="likeIdea('${p.id}', ${p.likes || 0}, ${JSON.stringify(p.likedBy || []).replace(/"/g, '&quot;')})" 
+                                        class="px-3 py-1.5 rounded-xl ${hasLiked ? 'bg-brand-500/30 text-brand-neon border border-brand-neon/40' : 'bg-slate-800 text-slate-300 hover:text-white'} text-xs font-bold transition flex items-center space-x-1 shrink-0">
+                                    <i class="fa-solid fa-paw"></i>
+                                    <span>${p.likes || 0}</span>
+                                </button>
+                            </div>
+                            <p class="text-slate-300 text-sm leading-relaxed">${escapeHTML(p.text || '')}</p>
+                            <div class="text-xs text-slate-400 flex items-center justify-between pt-2 border-t border-white/5">
+                                <span><i class="fa-solid fa-feather mr-1"></i>${escapeHTML(p.author || 'Estudiante')}</span>
+                                <span>${formatDate(p.createdAt)}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            if (showcase) {
+                showcase.innerHTML = proposals.slice(0, 6).map(p => {
+                    const badgeClass = categoryColors[p.category] || 'text-brand-neon bg-brand-500/20 border-brand-500/30';
+                    const uid = currentUser ? currentUser.uid : '';
+                    const hasLiked = (p.likedBy || []).includes(uid);
+
+                    return `
+                        <div class="glass-card p-6 rounded-3xl border border-white/10 flex flex-col justify-between space-y-4">
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border ${badgeClass}">
+                                        ${escapeHTML(p.category || 'Propuesta')}
+                                    </span>
+                                    <button onclick="likeIdea('${p.id}', ${p.likes || 0}, ${JSON.stringify(p.likedBy || []).replace(/"/g, '&quot;')})" 
+                                            class="px-3 py-1 rounded-xl ${hasLiked ? 'bg-brand-500/30 text-brand-neon border border-brand-neon/40' : 'bg-slate-800 text-slate-300 hover:text-white'} text-xs font-bold transition flex items-center space-x-1">
+                                        <i class="fa-solid fa-paw"></i>
+                                        <span>${p.likes || 0}</span>
+                                    </button>
+                                </div>
+                                <p class="text-slate-200 text-sm font-medium leading-relaxed">${escapeHTML(p.text || '')}</p>
+                            </div>
+                            <div class="text-xs text-slate-400 pt-3 border-t border-white/10 flex justify-between items-center">
+                                <span class="font-semibold text-slate-300"><i class="fa-solid fa-shield-cat mr-1 text-brand-neon"></i>${escapeHTML(p.author || 'Estudiante')}</span>
+                                <span>${formatDate(p.createdAt)}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function escapeHTML(str) {
+            return String(str).replace(/[&<>"']/g, function(m) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+            });
+        }
+
+        function formatDate(ts) {
+            if (!ts) return 'Reciente';
+            const diff = Math.floor((Date.now() - ts) / 1000);
+            if (diff < 60) return 'Hace un momento';
+            if (diff < 3600) return `Hace ${Math.floor(diff / 60)} min`;
+            if (diff < 86400) return `Hace ${Math.floor(diff / 3600)} h`;
+            return `Hace ${Math.floor(diff / 86400)} días`;
+        }
+
+        function initThreeJSWolfHead() {
+            const container = document.getElementById('three-container');
+            if (!container) return;
+
+            function isWebGLAvailable() {
+                try {
+                    const canvas = document.createElement('canvas');
+                    return !!(window.WebGLRenderingContext && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
+                } catch (e) {
+                    return false;
+                }
+            }
+
+            if (!isWebGLAvailable()) {
+                container.innerHTML = '<div class="w-full h-full bg-gradient-to-tr from-indigo-950/40 via-slate-950 to-brand-900/30"></div>';
+                return;
+            }
+
+            try {
+                const scene = new THREE.Scene();
+                const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                
+                const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                container.appendChild(renderer.domElement);
+
+                const wolfGroup = new THREE.Group();
+
+                const matWolf = new THREE.MeshPhongMaterial({
+                    color: 0x6366f1,
+                    wireframe: true,
+                    emissive: 0x002040,
+                    shininess: 120
+                });
+
+                const matAccent = new THREE.MeshBasicMaterial({
+                    color: 0x00f0ff,
+                    wireframe: true
+                });
+
+                const snoutGeo = new THREE.ConeGeometry(1.2, 3, 5);
+                snoutGeo.rotateX(Math.PI / 2);
+                const snout = new THREE.Mesh(snoutGeo, matWolf);
+                snout.position.set(0, -0.2, 1.2);
+                wolfGroup.add(snout);
+
+                const headGeo = new THREE.DodecahedronGeometry(1.8, 0);
+                const head = new THREE.Mesh(headGeo, matWolf);
+                wolfGroup.add(head);
+
+                const earGeoLeft = new THREE.ConeGeometry(0.8, 2.2, 3);
+                earGeoLeft.rotateZ(-Math.PI / 8);
+                const earLeft = new THREE.Mesh(earGeoLeft, matAccent);
+                earLeft.position.set(-1.1, 1.8, -0.2);
+                wolfGroup.add(earLeft);
+
+                const earGeoRight = new THREE.ConeGeometry(0.8, 2.2, 3);
+                earGeoRight.rotateZ(Math.PI / 8);
+                const earRight = new THREE.Mesh(earGeoRight, matAccent);
+                earRight.position.set(1.1, 1.8, -0.2);
+                wolfGroup.add(earRight);
+
+                const torusGeo = new THREE.TorusGeometry(4.2, 0.04, 16, 100);
+                const torusMesh = new THREE.Mesh(torusGeo, matAccent);
+                scene.add(torusMesh);
+
+                scene.add(wolfGroup);
+
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+                scene.add(ambientLight);
+
+                const pointLight = new THREE.PointLight(0x00f0ff, 3, 50);
+                pointLight.position.set(5, 5, 5);
+                scene.add(pointLight);
+
+                camera.position.z = 7;
+
+                let mouseX = 0, mouseY = 0;
+                window.addEventListener('mousemove', (e) => {
+                    mouseX = (e.clientX - window.innerWidth / 2) * 0.0008;
+                    mouseY = (e.clientY - window.innerHeight / 2) * 0.0008;
+                });
+
+                function animate() {
+                    requestAnimationFrame(animate);
+                    wolfGroup.rotation.y += 0.005;
+                    wolfGroup.rotation.x = Math.sin(Date.now() * 0.001) * 0.1;
+                    
+                    torusMesh.rotation.x -= 0.004;
+                    torusMesh.rotation.y += 0.006;
+
+                    wolfGroup.rotation.y += (mouseX - wolfGroup.rotation.y) * 0.05;
+                    wolfGroup.rotation.x += (mouseY - wolfGroup.rotation.x) * 0.05;
+
+                    renderer.render(scene, camera);
+                }
+                animate();
+
+                window.addEventListener('resize', () => {
+                    camera.aspect = window.innerWidth / window.innerHeight;
+                    if (camera.updateProjectionMatrix) camera.updateProjectionMatrix();
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                });
+            } catch (err) {
+                console.error("Error al inicializar Three.js:", err);
+            }
+        }
+
+        function initGSAPAnimations() {
+            gsap.from('#hero-title', { duration: 1.2, y: 50, opacity: 0, ease: 'power3.out', delay: 0.2 });
+            gsap.from('#hero-subtitle', { duration: 1.2, y: 40, opacity: 0, ease: 'power3.out', delay: 0.4 });
+            gsap.from('#hero-buttons', { duration: 1, y: 30, opacity: 0, ease: 'power3.out', delay: 0.6 });
+
+            gsap.utils.toArray('.parallax-img').forEach(img => {
+                gsap.to(img, {
+                    yPercent: -20,
+                    ease: 'none',
+                    scrollTrigger: {
+                        trigger: img.parentElement,
+                        start: 'top bottom',
+                        end: 'bottom top',
+                        scrub: 1
+                    }
+                });
+            });
+
+            gsap.from('.reveal-left', {
+                scrollTrigger: { trigger: '.reveal-left', start: 'top 80%' },
+                x: -60,
+                opacity: 0,
+                duration: 1,
+                ease: 'power2.out'
+            });
+
+            gsap.from('.reveal-right', {
+                scrollTrigger: { trigger: '.reveal-right', start: 'top 80%' },
+                x: 60,
+                opacity: 0,
+                duration: 1,
+                ease: 'power2.out'
+            });
+        }
+
+        function switchMainView(view) {
+            const viewInfo = document.getElementById('view-info');
+            const viewAportaciones = document.getElementById('view-aportaciones');
+            const btnInfo = document.getElementById('tab-info-btn');
+            const btnAportaciones = document.getElementById('tab-aportaciones-btn');
+
+            if (view === 'info') {
+                viewInfo.classList.remove('hidden');
+                viewAportaciones.classList.add('hidden');
+
+                btnInfo.className = "px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300 bg-gradient-to-r from-brand-600 to-brand-500 text-white shadow-md";
+                btnAportaciones.className = "px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300 text-slate-400 hover:text-white";
+
+                gsap.from(viewInfo, { opacity: 0, y: 20, duration: 0.5 });
+            } else {
+                viewInfo.classList.add('hidden');
+                viewAportaciones.classList.remove('hidden');
+
+                btnAportaciones.className = "px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300 bg-gradient-to-r from-pink-600 to-pink-500 text-white shadow-md";
+                btnInfo.className = "px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300 text-slate-400 hover:text-white";
+
+                gsap.from(viewAportaciones, { opacity: 0, y: 20, duration: 0.5 });
+            }
+        }
+
+        function toggleReason(element) {
+            const text = element.querySelector('p');
+            const icon = element.querySelector('.fa-chevron-down');
+            
+            if (text.classList.contains('hidden')) {
+                text.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                text.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        async function takePledge() {
+            if (pledged) {
+                showToast("¡Ya has registrado tu compromiso de voto en esta terminal!", "fa-shield-cat");
+                return;
+            }
+
+            pledged = true;
+            const btn = document.getElementById('pledge-btn');
+            btn.innerText = "¡Manada Comprometida! 🐺";
+            btn.className = "w-full py-4 rounded-2xl bg-slate-800 text-brand-neon border border-brand-neon font-black text-lg cursor-default";
+
+            confetti({
+                particleCount: 140,
+                spread: 80,
+                origin: { y: 0.7 }
+            });
+
+            if (currentUser && window.pledgeDocRef) {
+                try {
+                    const docSnap = await window.getDoc(window.pledgeDocRef);
+                    let currentCount = 342;
+                    if (docSnap.exists() && typeof docSnap.data().count === 'number') {
+                        currentCount = docSnap.data().count;
+                    }
+                    const newCount = currentCount + 1;
+                    await window.setDoc(window.pledgeDocRef, { count: newCount }, { merge: true });
+                    showToast("¡Rugido registrado en el contador global de la manada!", "fa-paw");
+                } catch (e) {
+                    console.error("Error al registrar voto:", e);
+                }
+            }
+        }
+
+        async function submitIdea(event) {
+            event.preventDefault();
+
+            if (!currentUser) {
+                showToast("Estableciendo conexión con la manada...", "fa-triangle-exclamation");
+                return;
+            }
+
+            const author = document.getElementById('idea-author').value.trim();
+            const category = document.getElementById('idea-category').value;
+            const text = document.getElementById('idea-text').value.trim();
+
+            if (!author || !text) return;
+
+            try {
+                await window.addDoc(window.proposalsColRef, {
+                    author: author,
+                    category: category,
+                    text: text,
+                    likes: 0,
+                    likedBy: [],
+                    createdAt: Date.now()
+                });
+
+                document.getElementById('idea-form').reset();
+                showToast("¡Propuesta lanzada con éxito a la manada!", "fa-paw");
+            } catch (e) {
+                console.error("Error al publicar propuesta:", e);
+                showToast("Ocurrió un error al publicar. Reintenta.", "fa-triangle-exclamation");
+            }
+        }
+
+        async function likeIdea(proposalId, currentLikes, likedByArray) {
+            if (!currentUser) return;
+            const uid = currentUser.uid;
+
+            const likedArray = Array.isArray(likedByArray) ? likedByArray : [];
+            if (likedArray.includes(uid)) {
+                showToast("Ya respaldaste esta propuesta de la manada", "fa-shield-cat");
+                return;
+            }
+
+            try {
+                const propDocRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'proposals', proposalId);
+                await window.updateDoc(propDocRef, {
+                    likes: (currentLikes || 0) + 1,
+                    likedBy: [...likedArray, uid]
+                });
+                showToast("¡Respaldo de lobo registrado!", "fa-paw");
+            } catch (e) {
+                console.error("Error al dar respaldo:", e);
+            }
+        }
+
+        function shareTerminal() {
+            const shareData = {
+                title: 'Partido ICLJ - Terminal Informativa',
+                text: '¡Únete a la manada del Partido ICLJ y apoya las mejores propuestas estudiantiles!',
+                url: window.location.href
+            };
+
+            if (navigator.share && typeof navigator.share === 'function') {
+                navigator.share(shareData).then(() => {
+                    showToast("¡Enlace compartido con la manada!", "fa-paw");
+                }).catch((err) => {
+                    if (err.name !== 'AbortError') copyToClipboard(window.location.href);
+                });
+            } else {
+                copyToClipboard(window.location.href);
+            }
+        }
+
+        function copyToClipboard(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast("¡Enlace copiado al portapapeles!", "fa-copy");
+                } else {
+                    showToast("Copia este enlace: " + text, "fa-link");
+                }
+            } catch (err) {
+                showToast("Enlace: " + text, "fa-link");
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function showToast(message, iconClass = 'fa-paw') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            const toastIcon = document.getElementById('toast-icon');
+
+            if (!toast) return;
+            toastMsg.innerText = message;
+            toastIcon.className = `fa-solid ${iconClass} text-brand-neon text-xl`;
+
+            toast.classList.remove('translate-y-24', 'opacity-0');
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 3500);
+        }
+    </script>
+</body>
+</html>
